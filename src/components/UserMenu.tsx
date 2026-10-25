@@ -1,3 +1,4 @@
+import { connection } from "next/server";
 import { signInWithGoogle, signOut } from "@/app/auth/actions";
 import { createClient } from "@/lib/supabase/server";
 
@@ -6,6 +7,8 @@ const buttonClass =
 
 // Shows a sign-in button, or the signed-in user's name with a sign-out button.
 export async function UserMenu() {
+  // Always render per request: the login check reads the current time.
+  await connection();
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
   const claims = data?.claims;
