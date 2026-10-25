@@ -10,6 +10,7 @@ import { createClient } from "@supabase/supabase-js";
 type KanjiRow = {
   character: string;
   jlpt_level: number;
+  jlpt_level_estimated: boolean;
   meanings: string[];
   on_readings: string[];
   kun_readings: string[];
@@ -57,6 +58,24 @@ for (const [name, characters] of Object.entries(waller)) {
   }
 }
 
+// Kanji missing from the copy of Waller's lists (for example 分, which belongs in N5).
+// These levels are our estimate, from KANJIDIC2's old (pre-2010) JLPT level:
+// old level 4 -> N5; old level 2 -> N3 if in the top 500 by frequency, otherwise N2;
+// old level 1 -> N1. They are saved with jlpt_level_estimated = true.
+const estimatedLevels: Record<string, number> = {
+  分: 5,
+  的: 3, 無: 3, 可: 3, 身: 3,
+  畑: 2, 坊: 2,
+  里: 1, 丈: 1, 寿: 1, 唐: 1, 孝: 1, 慌: 1, 粧: 1, 吾: 1, 矩: 1, 璽: 1, 醇: 1, 汀: 1,
+};
+for (const [character, level] of Object.entries(estimatedLevels)) {
+  if (levelOf.has(character)) {
+    console.error(`${character} is already in Waller's lists; remove it from estimatedLevels.`);
+    process.exit(1);
+  }
+  levelOf.set(character, level);
+}
+
 // 2. Meanings, readings, stroke count, frequency, grade and radical from KANJIDIC2.
 const kanjidic = readText("kanjidic2.xml.gz");
 const rows = new Map<string, KanjiRow>();
@@ -66,13 +85,22 @@ for (const entry of kanjidic.split("<character>").slice(1)) {
   if (!character || !jlptLevel) continue;
 
   const radicalNumber = firstNumber(entry, /<rad_value rad_type="classical">(\d+)</);
+  // Meanings without an m_lang attribute are English. Drop dictionary notes such
+  // as "one radical (no.1)".
+  const meanings = allMatches(entry, /<meaning>(.+?)<\/meaning>/g).filter(
+    (meaning) => !/radical \(no\./.test(meaning),
+  );
   rows.set(character, {
     character,
     jlpt_level: jlptLevel,
-    // Meanings without an m_lang attribute are English.
-    meanings: allMatches(entry, /<meaning>(.+?)<\/meaning>/g),
+    jlpt_level_estimated: character in estimatedLevels,
+    meanings,
     on_readings: allMatches(entry, /<reading r_type="ja_on">(.+?)<\/reading>/g),
-    kun_readings: allMatches(entry, /<reading r_type="ja_kun">(.+?)<\/reading>/g),
+    // Drop the few "kun readings" that are really foreign unit names in katakana,
+    // such as デシメートル (decimetre) for 粉.
+    kun_readings: allMatches(entry, /<reading r_type="ja_kun">(.+?)<\/reading>/g).filter(
+      (reading) => /^[぀-ゟ.-]+$/.test(reading),
+    ),
     stroke_count: firstNumber(entry, /<stroke_count>(\d+)</) ?? 0,
     frequency: firstNumber(entry, /<freq>(\d+)</),
     sort_order: 0,
@@ -134,7 +162,12 @@ for (const level of [5, 4, 3, 2, 1]) {
   const first = inLevel.slice(0, 10).map((row) => row.character).join("");
   console.log(`N${level}: ${inLevel.length} kanji, starting ${first}`);
 }
-console.log(`Total: ${sorted.length} kanji`);
+console.log(`Total: ${sorted.length} kanji (${Object.keys(estimatedLevels).length} with estimated level)`);
+const noMeaning = sorted.filter((row) => row.meanings.length === 0);
+if (noMeaning.length > 0) {
+  console.error(`No English meaning: ${noMeaning.map((row) => row.character).join(" ")}`);
+  process.exit(1);
+}
 if (noStrokes.length > 0) console.log(`No stroke order in KanjiVG: ${noStrokes.join(" ")}`);
 if (strokeCountDiffers.length > 0) {
   console.log(`Stroke count differs between KANJIDIC2 and KanjiVG: ${strokeCountDiffers.join(" ")}`);

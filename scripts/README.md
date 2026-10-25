@@ -11,6 +11,8 @@ The raw files are not stored in Git. Download them into `scripts/data/` with the
 
 The JLPT lists come from a copy in the ffe4/kanji-lists project because tanos.co.uk was unreachable in October 2026. The copy matches Waller's published counts: N5 79, N4 166, N3 367, N2 367, N1 1232 (2211 in total).
 
+That copy is missing 19 kanji that clearly belong on the lists (for example 分, a basic N5 kanji). The script adds them with an estimated level, saved with `jlpt_level_estimated = true`. The rule and the list are in `estimatedLevels` in `import-kanji.mts`. If tanos.co.uk comes back, compare against it and replace the estimates with Waller's levels.
+
 You don't need to unzip the `.gz` files; the script reads them directly.
 
 ## Running it
@@ -33,8 +35,9 @@ It is safe to run again: existing kanji are updated, not duplicated.
 
 ## How the data is shaped
 
-- `jlpt_level`: 5 = N5 ... 1 = N1.
-- `on_readings` are in katakana, `kun_readings` in hiragana. In kun readings a `.` marks where the kana ending (okurigana) starts, for example `た.べる` is written 食べる, and a `-` marks a prefix or suffix reading.
+- `jlpt_level`: 5 = N5 ... 1 = N1. `jlpt_level_estimated` is true for the 19 kanji whose level is our estimate.
+- `meanings`: English only, without KANJIDIC2's "radical (no. N)" notes.
+- `on_readings` are in katakana, `kun_readings` in hiragana (two katakana unit names in KANJIDIC2, for 粉 and 志, are dropped). In kun readings a `.` marks where the kana ending (okurigana) starts, for example `た.べる` is written 食べる, and a `-` marks a prefix or suffix reading.
 - `sort_order`: within each level, most common kanji first (KANJIDIC2 newspaper frequency rank). Kanji without a rank go last.
 - `stroke_paths`: one SVG path per stroke, in stroke order, drawn on a 109 x 109 canvas.
 - Romaji is not stored. The website converts the kana when it displays them.
