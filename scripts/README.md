@@ -36,7 +36,7 @@ It is safe to run again: existing kanji are updated, not duplicated.
 ## How the data is shaped
 
 - `jlpt_level`: 5 = N5 ... 1 = N1. `jlpt_level_estimated` is true for the 19 kanji whose level is our estimate.
-- `meanings`: English only, without KANJIDIC2's "radical (no. N)" notes.
+- `meanings`: English only. We modify KANJIDIC2's meanings for learners (the CC BY-SA licence allows this; the Credits page must say so): dictionary notes such as "radical (no. N)", "(kokuji)", "Inst." and zodiac hours such as "11PM-1AM" are removed, "10**16" becomes "10^16", and `meaningFixes` in `import-kanji.mts` puts a more useful meaning first for 37 kanji (for example 校 starts with "school", not "exam").
 - `on_readings` are in katakana, `kun_readings` in hiragana (two katakana unit names in KANJIDIC2, for 粉 and 志, are dropped). In kun readings a `.` marks where the kana ending (okurigana) starts, for example `た.べる` is written 食べる, and a `-` marks a prefix or suffix reading.
 - `sort_order`: within each level, most common kanji first (KANJIDIC2 newspaper frequency rank). Kanji without a rank go last.
 - `stroke_paths`: one SVG path per stroke, in stroke order, drawn on a 109 x 109 canvas.

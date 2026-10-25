@@ -76,6 +76,78 @@ for (const [character, level] of Object.entries(estimatedLevels)) {
   levelOf.set(character, level);
 }
 
+// Learner-friendly fixes to KANJIDIC2's English meanings, where the first meaning
+// (the one shown on a tile) is rare, archaic or misleading. `first` moves these to
+// the front; ones KANJIDIC2 doesn't have are added (return home, pass through,
+// manage, history, universe, muddy). `drop` removes wrong or misleading meanings.
+const meaningFixes: Record<string, { first: string[]; drop?: string[] }> = {
+  校: { first: ["school"] },
+  着: { first: ["wear", "arrive"] },
+  起: { first: ["wake up", "get up"] },
+  画: { first: ["picture"] },
+  帰: { first: ["return home"] },
+  仕: { first: ["serve", "doing"] },
+  召: { first: ["call", "send for"], drop: ["seduce"] },
+  様: { first: ["polite suffix", "way", "manner"] },
+  経: { first: ["pass through", "manage"], drop: ["pass thru"] },
+  参: { first: ["participate", "visit"] },
+  由: { first: ["a reason"] },
+  更: { first: ["again", "renew", "more and more"] },
+  的: { first: ["target", "adjective ending"] },
+  機: { first: ["machine", "opportunity"] },
+  介: { first: ["mediate"] },
+  歴: { first: ["history", "passage of time"] },
+  宇: { first: ["universe", "heaven"] },
+  般: { first: ["general", "all"] },
+  匹: { first: ["counter for small animals"] },
+  侍: { first: ["samurai", "serve"] },
+  援: { first: ["help", "save"] },
+  裁: { first: ["judge", "decision"] },
+  故: { first: ["reason", "the late"] },
+  弁: { first: ["speech", "dialect", "valve"] },
+  就: { first: ["take position", "settle"] },
+  致: { first: ["do", "send"], drop: ["doth"] },
+  喪: { first: ["mourning"] },
+  析: { first: ["analyze"] },
+  仮: { first: ["temporary", "interim"] },
+  里: { first: ["village", "parent's home"] },
+  倉: { first: ["warehouse", "storehouse"] },
+  旬: { first: ["ten-day period", "season (for specific products)"], drop: ["decameron"] },
+  脚: { first: ["leg"] },
+  岳: { first: ["peak", "mountain"] },
+  壌: { first: ["soil", "earth"] },
+  濁: { first: ["muddy", "impurity"] },
+  張: { first: ["stretch", "spread"] },
+};
+
+const addedMeanings: string[] = [];
+
+function cleanMeanings(character: string, meanings: string[]): string[] {
+  const cleaned = meanings
+    .filter(
+      (meaning) =>
+        !/radical \(no\./.test(meaning) && // "one radical (no.1)"
+        meaning !== "(kokuji)" && // dictionary jargon: "kanji made in Japan"
+        meaning !== "Inst." &&
+        !/^\d{1,2}(AM|PM)?-\d{1,2}(AM|PM)$/.test(meaning), // zodiac hours, "11PM-1AM"
+    )
+    .map((meaning) => meaning.replace(/10\*\*(\d+)/g, "10^$1")); // "10**16" -> "10^16"
+
+  const fix = meaningFixes[character];
+  if (!fix) return cleaned;
+  for (const meaning of fix.drop ?? []) {
+    if (!cleaned.includes(meaning)) {
+      console.error(`meaningFixes: ${character} has no meaning "${meaning}" to drop.`);
+      process.exit(1);
+    }
+  }
+  for (const meaning of fix.first) {
+    if (!cleaned.includes(meaning)) addedMeanings.push(`${character} ${meaning}`);
+  }
+  const moved = [...fix.first, ...(fix.drop ?? [])];
+  return [...fix.first, ...cleaned.filter((meaning) => !moved.includes(meaning))];
+}
+
 // 2. Meanings, readings, stroke count, frequency, grade and radical from KANJIDIC2.
 const kanjidic = readText("kanjidic2.xml.gz");
 const rows = new Map<string, KanjiRow>();
@@ -85,16 +157,12 @@ for (const entry of kanjidic.split("<character>").slice(1)) {
   if (!character || !jlptLevel) continue;
 
   const radicalNumber = firstNumber(entry, /<rad_value rad_type="classical">(\d+)</);
-  // Meanings without an m_lang attribute are English. Drop dictionary notes such
-  // as "one radical (no.1)".
-  const meanings = allMatches(entry, /<meaning>(.+?)<\/meaning>/g).filter(
-    (meaning) => !/radical \(no\./.test(meaning),
-  );
   rows.set(character, {
     character,
     jlpt_level: jlptLevel,
     jlpt_level_estimated: character in estimatedLevels,
-    meanings,
+    // Meanings without an m_lang attribute are English.
+    meanings: cleanMeanings(character, allMatches(entry, /<meaning>(.+?)<\/meaning>/g)),
     on_readings: allMatches(entry, /<reading r_type="ja_on">(.+?)<\/reading>/g),
     // Drop the few "kun readings" that are really foreign unit names in katakana,
     // such as デシメートル (decimetre) for 粉.
@@ -163,6 +231,12 @@ for (const level of [5, 4, 3, 2, 1]) {
   console.log(`N${level}: ${inLevel.length} kanji, starting ${first}`);
 }
 console.log(`Total: ${sorted.length} kanji (${Object.keys(estimatedLevels).length} with estimated level)`);
+console.log(`Meanings added (not in KANJIDIC2): ${addedMeanings.join(", ")}`);
+const unusedFixes = Object.keys(meaningFixes).filter((character) => !rows.has(character));
+if (unusedFixes.length > 0) {
+  console.error(`meaningFixes for kanji not in the lists: ${unusedFixes.join(" ")}`);
+  process.exit(1);
+}
 const noMeaning = sorted.filter((row) => row.meanings.length === 0);
 if (noMeaning.length > 0) {
   console.error(`No English meaning: ${noMeaning.map((row) => row.character).join(" ")}`);
