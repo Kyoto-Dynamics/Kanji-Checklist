@@ -1,6 +1,3 @@
-import { Suspense } from "react";
-import { SupabaseStatus } from "@/components/SupabaseStatus";
-
 const statuses = [
   { label: "Not started", symbol: "○", className: "bg-zinc-200 text-zinc-800" },
   { label: "Learning", symbol: "…", className: "bg-yellow-200 text-yellow-900" },
@@ -19,7 +16,7 @@ export default function Home() {
         </p>
         <h1 className="text-3xl font-bold">Kanji Checklist</h1>
         <p className="text-lg text-zinc-700">
-          Track your kanji progress for every JLPT level, from N5 to N1. Tap a kanji to change its colour.
+          Track your kanji progress for every JLPT level, from N5 to N1. Sign in with Google to save your progress.
         </p>
       </header>
 
@@ -49,15 +46,6 @@ export default function Home() {
           ))}
         </ul>
         <p className="text-sm text-zinc-600">Level pages are coming soon.</p>
-      </section>
-
-      <section aria-labelledby="setup-heading" className="flex flex-col gap-2 rounded-lg bg-zinc-100 p-4 text-sm">
-        <h2 id="setup-heading" className="font-semibold">
-          Setup check
-        </h2>
-        <Suspense fallback={<p>Checking Supabase connection…</p>}>
-          <SupabaseStatus />
-        </Suspense>
       </section>
     </main>
   );
