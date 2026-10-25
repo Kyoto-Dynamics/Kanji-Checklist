@@ -48,16 +48,17 @@ Real values live in `.env.local`, which must stay in `.gitignore`. Keep `.env.ex
 
 All database changes go in SQL files under `supabase/migrations/` (named `YYYYMMDDHHMMSS_description.sql`) so they are tracked in git. Carl applies them by pasting into the Supabase SQL Editor until we adopt the Supabase CLI.
 
-- `kanji`: one row per kanji. Columns: `character` (text, primary key), `jlpt_level` (smallint 1 to 5, where 5 = N5 and 1 = N1), `meanings` (text[]), `on_readings` (text[]), `kun_readings` (text[]), `stroke_count` (smallint), `frequency` (int, nullable), `sort_order` (int, for display order within a level). Readable by everyone, writable by nobody through the API.
+- `kanji`: one row per kanji. Columns: `character` (text, primary key), `jlpt_level` (smallint 1 to 5, where 5 = N5 and 1 = N1), `meanings` (text[]), `on_readings` (text[]), `kun_readings` (text[]), `stroke_count` (smallint), `frequency` (int, nullable), `sort_order` (int, for display order within a level, most common first), `grade` (smallint, nullable, Japanese school grade), `radical` (text), `stroke_paths` (text[], SVG path per stroke from KanjiVG). Romaji is derived from the kana when displayed, not stored. Readable by everyone, writable by nobody through the API.
 - `user_kanji_progress`: one row per user per kanji that is not grey. Columns: `user_id` (uuid, references `auth.users` with `on delete cascade`), `kanji` (text, references `kanji.character`), `status` (enum `kanji_status`: `learning`, `struggling`, `learnt`), `updated_at` (timestamptz default now()). Primary key `(user_id, kanji)`. Setting a kanji back to grey deletes the row.
 - **Row Level Security must be enabled on every table.** Users may select, insert, update and delete only rows where `user_id = auth.uid()`.
 
 ## Kanji data and licences
 
 - Kanji details (meanings, readings, stroke count, frequency) come from **KANJIDIC2** by the Electronic Dictionary Research and Development Group (EDRDG), licensed **CC BY-SA 4.0**: https://www.edrdg.org/edrdg/licence.html
-- JLPT level lists (N5 to N1) come from **Jonathan Waller's lists** at http://www.tanos.co.uk/jlpt/ (Creative Commons BY). There is no official JLPT kanji list since 2010.
+- JLPT level lists (N5 to N1) come from **Jonathan Waller's lists** at http://www.tanos.co.uk/jlpt/ (Creative Commons BY). There is no official JLPT kanji list since 2010. tanos.co.uk was unreachable in October 2026, so the import uses the copy in the ffe4/kanji-lists project (MIT); see `scripts/README.md`.
+- Stroke order comes from **KanjiVG** by Ulrich Apel, licensed **CC BY-SA 3.0**: https://kanjivg.tagaini.net
 - Import with a script in `scripts/` that reads the source files and produces a SQL seed or upserts via the secret key. Keep the script in the repo so the data can be rebuilt. Do not commit the large raw source files; document where to download them in `scripts/README.md`.
-- The site must have a Credits page attributing both sources with links.
+- The site must have a Credits page attributing all three sources (KANJIDIC2, Waller's lists, KanjiVG) with links.
 - Do not copy data from WaniKani, Jisho, Anki shared decks or similar apps.
 
 ## UI and behaviour
@@ -106,7 +107,7 @@ Work through these in order. Do not start a later phase without Carl asking.
 - Kanji detail view (meanings, readings, stroke count), filters (show only red, and so on), overall progress dashboard, data export (download my progress).
 
 **Phase 3: Practice**
-- Quizzes and practice tests based on the user's yellow and red kanji. Possibly stroke order from KanjiVG (CC BY-SA 3.0).
+- Quizzes and practice tests based on the user's yellow and red kanji. Stroke order practice (KanjiVG data is already imported).
 
 **Phase 4: Launch and income**
 - Custom domain, Patreon link, ads with cookie consent, review hosting plan (see Cost rules).

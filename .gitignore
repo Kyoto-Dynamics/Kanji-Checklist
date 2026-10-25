@@ -40,3 +40,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# raw kanji source files (see scripts/README.md)
+/scripts/data/
+
+# private notes, never commit
+/Kanji Checklist Credentials.txt
