@@ -39,9 +39,18 @@ npm run build
 
 `lint` checks the code style. `build` makes a production version of the site and catches errors. Both should finish without errors before committing.
 
+## Database changes
+
+Every change to the database is a SQL file in `supabase/migrations/`, run in order of the date at the start of the file name. To apply one:
+
+1. In the Supabase dashboard, open your project and click **SQL Editor** in the left sidebar.
+2. Click **New query**, paste the whole file in, and click **Run**.
+3. Run each file only once.
+
 ## Project layout
 
 - `src/app/`: the pages of the site
 - `src/components/`: reusable pieces of the page
 - `src/lib/supabase/`: code for talking to Supabase (`client.ts` for the browser, `server.ts` for the server)
+- `supabase/migrations/`: database changes (see above)
 - `CLAUDE.md`: project rules and roadmap for Claude Code
