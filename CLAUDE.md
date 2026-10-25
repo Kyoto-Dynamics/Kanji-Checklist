@@ -64,7 +64,7 @@ All database changes go in SQL files under `supabase/migrations/` (named `YYYYMM
 ## UI and behaviour
 
 - Mobile first, then desktop. English UI. Japanese characters must render with a good CJK font stack (for example `"Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif`).
-- A page per JLPT level showing a grid of kanji tiles, plus a progress summary per level (counts of each colour).
+- All levels on one page (the home page), stacked N5 at the top down to N1 at the bottom, each with a grid of kanji tiles and a progress summary (counts of each colour). A sticky N5 to N1 bar jumps to each section. No separate page per level.
 - Tapping a tile cycles grey → yellow → red → green → grey. Save immediately (optimistic update, revert and show a message on error).
 - Colour must not be the only signal: also show a small icon or label for each status, for colour-blind users. Meet basic accessibility (keyboard focus, labels, contrast).
 - Signed-out visitors can browse the kanji grid but must sign in to save progress.
@@ -99,7 +99,7 @@ Work through these in order. Do not start a later phase without Carl asking.
 2. Google sign-in and sign-out, with a header showing the signed-in user.
 3. Database migrations for `kanji` and `user_kanji_progress` with Row Level Security.
 4. Kanji import script and seed data for N5 to N1.
-5. Level pages with the kanji grid, colour cycling, and progress summary.
+5. One-page kanji checklist (all levels, N5 to N1) with the kanji grid, colour cycling, and progress summary per level.
 6. Settings page with Delete my account; Privacy, Terms and Credits pages.
 7. Deploy to Vercel.
 

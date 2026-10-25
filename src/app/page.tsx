@@ -1,52 +1,92 @@
-const statuses = [
-  { label: "Not started", symbol: "○", className: "bg-zinc-200 text-zinc-800" },
-  { label: "Learning", symbol: "…", className: "bg-yellow-200 text-yellow-900" },
-  { label: "Struggling", symbol: "!", className: "bg-red-200 text-red-900" },
-  { label: "Learnt", symbol: "✓", className: "bg-green-200 text-green-900" },
-];
+import { connection } from "next/server";
+import { Suspense } from "react";
+import { KanjiGrid } from "@/components/KanjiGrid";
+import { getLevelKanji, getUserProgress, type LevelKanji } from "@/lib/kanji";
+import { type KanjiStatus, statusInfo, statusOrder } from "@/lib/kanji-status";
+import { levels } from "@/lib/levels";
+import { createClient } from "@/lib/supabase/server";
 
-const levels = ["N5", "N4", "N3", "N2", "N1"];
+export default async function Home() {
+  // Cached, so this doesn't hit the database on every visit.
+  const kanjiByLevel = await Promise.all(levels.map((level) => getLevelKanji(level.number)));
 
-export default function Home() {
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-col gap-10 px-4 py-12">
-      <header className="flex flex-col gap-3">
-        <p lang="ja" className="font-jp text-5xl">
-          漢字
-        </p>
+    <main className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-8">
+      <header className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold">Kanji Checklist</h1>
-        <p className="text-lg text-zinc-700">
-          Track your kanji progress for every JLPT level, from N5 to N1. Sign in with Google to save your progress.
+        <p className="text-zinc-700">
+          Every JLPT kanji from N5 to N1, most common first within each level. Sign in with Google to save your
+          progress.
+        </p>
+        <p className="text-sm text-zinc-700">
+          Tap a kanji to cycle:{" "}
+          {statusOrder.map((status, index) => (
+            <span key={status}>
+              {index > 0 && " → "}
+              <span aria-hidden="true">{statusInfo[status].symbol} </span>
+              {statusInfo[status].label}
+            </span>
+          ))}
         </p>
       </header>
 
-      <section aria-labelledby="statuses-heading" className="flex flex-col gap-3">
-        <h2 id="statuses-heading" className="text-xl font-semibold">
-          Colours
-        </h2>
-        <ul className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-          {statuses.map((status) => (
-            <li key={status.label} className={`rounded-lg px-3 py-2 font-medium ${status.className}`}>
-              <span aria-hidden="true">{status.symbol} </span>
-              {status.label}
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section aria-labelledby="levels-heading" className="flex flex-col gap-3">
-        <h2 id="levels-heading" className="text-xl font-semibold">
-          Levels
-        </h2>
-        <ul className="flex flex-wrap gap-2">
+      <nav aria-label="Jump to level" className="sticky top-0 z-10 -mx-4 bg-white/95 px-4 py-2 backdrop-blur">
+        <ul className="flex gap-2">
           {levels.map((level) => (
-            <li key={level} className="rounded-lg border border-zinc-300 px-4 py-2 font-medium">
-              {level}
+            <li key={level.slug} className="flex-1">
+              <a
+                href={`#${level.slug}`}
+                className="block rounded-lg border border-zinc-300 py-2 text-center font-medium hover:bg-zinc-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+              >
+                {level.name}
+              </a>
             </li>
           ))}
         </ul>
-        <p className="text-sm text-zinc-600">Level pages are coming soon.</p>
-      </section>
+      </nav>
+
+      <Suspense fallback={<LevelSections kanjiByLevel={kanjiByLevel} progress={{}} userId={null} loading />}>
+        <SignedInLevelSections kanjiByLevel={kanjiByLevel} />
+      </Suspense>
     </main>
   );
+}
+
+// Reads the signed-in user (if any) and their progress once, on every visit.
+async function SignedInLevelSections({ kanjiByLevel }: { kanjiByLevel: LevelKanji[][] }) {
+  await connection();
+  const supabase = await createClient();
+  const { data } = await supabase.auth.getClaims();
+  const userId = data?.claims?.sub ?? null;
+  const progress = userId ? await getUserProgress() : {};
+
+  return <LevelSections kanjiByLevel={kanjiByLevel} progress={progress} userId={userId} />;
+}
+
+function LevelSections({
+  kanjiByLevel,
+  progress,
+  userId,
+  loading = false,
+}: {
+  kanjiByLevel: LevelKanji[][];
+  progress: Record<string, KanjiStatus>;
+  userId: string | null;
+  loading?: boolean;
+}) {
+  return levels.map((level, index) => (
+    <section key={level.slug} id={level.slug} aria-labelledby={`${level.slug}-heading`} className="scroll-mt-16">
+      <h2 id={`${level.slug}-heading`} className="mb-3 flex items-baseline gap-2 text-2xl font-bold">
+        JLPT {level.name}
+        <span className="text-base font-normal text-zinc-600">{kanjiByLevel[index].length} kanji</span>
+      </h2>
+      <KanjiGrid
+        levelName={level.name}
+        kanji={kanjiByLevel[index]}
+        initialProgress={progress}
+        userId={userId}
+        loading={loading}
+      />
+    </section>
+  ));
 }
