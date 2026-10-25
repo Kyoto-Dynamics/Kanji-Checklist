@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { connection } from "next/server";
 import { signInWithGoogle, signOut } from "@/app/auth/actions";
 import { createClient } from "@/lib/supabase/server";
@@ -27,10 +28,10 @@ export async function UserMenu() {
 
   return (
     <div className="flex min-w-0 items-center gap-3">
-      <p className="min-w-0 truncate text-sm">
-        <span className="sr-only">Signed in as </span>
+      <Link href="/settings" className="min-w-0 truncate text-sm underline-offset-2 hover:underline">
+        <span className="sr-only">Settings, signed in as </span>
         {name}
-      </p>
+      </Link>
       <form action={signOut}>
         <button type="submit" className={buttonClass}>
           Sign out

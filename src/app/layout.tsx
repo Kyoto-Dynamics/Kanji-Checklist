@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import "./globals.css";
 
@@ -19,6 +20,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col bg-white text-zinc-900">
         <SiteHeader />
         {children}
+        <SiteFooter />
       </body>
     </html>
   );
