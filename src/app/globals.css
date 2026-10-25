@@ -1,0 +1,6 @@
+@import "tailwindcss";
+
+@theme {
+  /* Use on Japanese text (with lang="ja") so kanji get Japanese, not Chinese, glyph shapes. */
+  --font-jp: "Noto Sans JP", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+}
