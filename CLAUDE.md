@@ -9,7 +9,7 @@ A free public website where Japanese learners track their kanji progress by JLPT
 | Red | `struggling` | Struggling with it |
 | Green | `learnt` | Learnt |
 
-"Kanji Checklist" is a placeholder name. There is no domain yet.
+"Kanji Checklist" is a placeholder name. There is no custom domain yet. The live site is https://kanji-checklist-qdf4.vercel.app (Vercel's free address). The GitHub repo (Kyoto-Dynamics/Kanji-Checklist) is public, because Vercel's free plan can't deploy private repos owned by an organisation; never commit secrets.
 
 ## About the owner (read this first)
 
@@ -25,7 +25,7 @@ A free public website where Japanese learners track their kanji progress by JLPT
 
 - **Next.js** (App Router) with **TypeScript** and **Tailwind CSS**. Use the `src/` folder.
 - **Supabase** for the Postgres database and authentication, via `@supabase/supabase-js` and `@supabase/ssr` (cookie-based sessions for server components).
-- **Vercel** for hosting (free Hobby plan for now).
+- **Vercel** for hosting (free Hobby plan for now). Every push to `main` on GitHub deploys to the live site automatically, so a push is also a deploy. The three environment variables are set in the Vercel project settings.
 - **npm** as the package manager. Node.js LTS.
 - Keep dependencies few. Prefer what Next.js, React, Tailwind and Supabase already provide.
 
@@ -86,7 +86,7 @@ Collect the minimum personal data. No analytics or tracking scripts without aski
 
 Carl wants to spend as little as possible. Flag any cost before suggesting it. Known limits:
 
-- Vercel Hobby plan is free but **non-commercial only**. When ads or Patreon income start, the options are Vercel Pro ($20/month) or moving to Cloudflare (free, commercial allowed).
+- Vercel Hobby plan is free but **non-commercial only**. When ads or Patreon income start, the options are Vercel Pro ($20/month) or moving to Cloudflare. Checked in October 2026: Cloudflare's free Workers plan (10 ms CPU per request, 3 MB code size) is likely too small for this site, and the OpenNext adapter's support for Next.js 16 with Cache Components and `proxy.ts` was experimental with open bugs. Plan on Cloudflare Workers Paid ($5/month) and re-check OpenNext support before moving.
 - Supabase free plan: 500 MB database, 50,000 monthly active users, project pauses after 1 week with no activity. Pro is $25/month.
 - Claude Code runs on Carl's Claude Pro plan, which has usage limits. Keep sessions focused and avoid re-reading large files unnecessarily.
 
@@ -101,7 +101,7 @@ Work through these in order. Do not start a later phase without Carl asking.
 4. Kanji import script and seed data for N5 to N1.
 5. One-page kanji checklist (all levels, N5 to N1) with the kanji grid, colour cycling, and progress summary per level.
 6. Settings page with Delete my account; Privacy, Terms and Credits pages.
-7. Deploy to Vercel.
+7. Deploy to Vercel. (Phase 1 done 27 October 2026.)
 
 **Phase 2: Polish**
 - Kanji detail view (meanings, readings, stroke count), filters (show only red, and so on), overall progress dashboard, data export (download my progress).

@@ -2,7 +2,7 @@
 
 A free website where Japanese learners track their kanji progress by JLPT level (N5 to N1).
 
-Built with Next.js, TypeScript, Tailwind CSS and Supabase.
+Built with Next.js, TypeScript, Tailwind CSS and Supabase. Live at https://kanji-checklist-qdf4.vercel.app.
 
 ## First-time setup
 
@@ -38,6 +38,21 @@ npm run build
 ```
 
 `lint` checks the code style. `build` makes a production version of the site and catches errors. Both should finish without errors before committing.
+
+If PowerShell says "running scripts is disabled on this system", run `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` once (or type `npm.cmd` instead of `npm`).
+
+## The live site
+
+The site is hosted on Vercel (free Hobby plan). Every push to the `main` branch on GitHub updates the live site automatically within a few minutes. To check a deployment, open the project in the Vercel dashboard and look at **Deployments**.
+
+The Supabase keys for the live site are set in Vercel under **Settings > Environment Variables**. If you add a new environment variable, add it there too, then redeploy.
+
+If the site's address changes (for example a custom domain), add the new address in:
+
+- Supabase: **Authentication > URL Configuration** (Site URL, and Redirect URLs with `/auth/callback`)
+- Google Cloud Console: **Clients > Kanji Checklist web > Authorized JavaScript origins**
+
+Google sign-in is in **Testing** mode: only the test users listed in Google Cloud Console (**Audience**) can sign in. Switch it to **In production** before public launch.
 
 ## Database changes
 
