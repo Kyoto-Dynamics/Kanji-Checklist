@@ -1,12 +1,16 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { signInWithGoogle } from "@/app/auth/actions";
+import { useRef, useState, useSyncExternalStore } from "react";
 import type { LevelKanji } from "@/lib/kanji";
 import { type KanjiStatus, nextStatus, statusInfo, statusOrder } from "@/lib/kanji-status";
+import {
+  getLocalProgress,
+  getServerLocalProgress,
+  type Progress,
+  setLocalStatus,
+  subscribeLocalProgress,
+} from "@/lib/local-progress";
 import { createClient } from "@/lib/supabase/client";
-
-type Progress = Record<string, KanjiStatus>;
 
 // Wait this long after the last tap before saving, so tapping three times to
 // reach green sends one save instead of three.
@@ -32,8 +36,16 @@ export function KanjiGrid({
   userId: string | null;
   loading?: boolean;
 }) {
-  const [progress, setProgress] = useState(initialProgress);
-  const [message, setMessage] = useState<"sign-in" | string | null>(null);
+  // Signed in: progress lives in the account (database). Signed out: in this browser.
+  const [accountProgress, setAccountProgress] = useState(initialProgress);
+  const localProgress = useSyncExternalStore(
+    subscribeLocalProgress,
+    getLocalProgress,
+    getServerLocalProgress,
+  );
+  const progress = loading ? {} : userId ? accountProgress : localProgress;
+
+  const [message, setMessage] = useState<string | null>(null);
   // What the database has, so a failed save can go back to it.
   const saved = useRef(initialProgress);
   const timers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
@@ -41,12 +53,15 @@ export function KanjiGrid({
   const queues = useRef(new Map<string, Promise<void>>());
 
   function handleTap(character: string) {
+    const status = nextStatus(progress[character] ?? "unlearnt");
     if (!userId) {
-      setMessage("sign-in");
+      if (!setLocalStatus(character, status)) {
+        setMessage("This browser won't let the site save progress (private browsing can block it). Sign in to save to an account instead.");
+      }
       return;
     }
-    const status = nextStatus(progress[character] ?? "unlearnt");
-    setProgress((current) => withStatus(current, character, status));
+
+    setAccountProgress((current) => withStatus(current, character, status));
     clearTimeout(timers.current.get(character));
     timers.current.set(
       character,
@@ -69,7 +84,7 @@ export function KanjiGrid({
     if (error) {
       // Go back to the saved colour, unless the user has tapped this kanji again since.
       if (!timers.current.has(character)) {
-        setProgress((current) =>
+        setAccountProgress((current) =>
           withStatus(current, character, saved.current[character] ?? "unlearnt"),
         );
       }
@@ -118,23 +133,11 @@ export function KanjiGrid({
       </section>
 
       <div aria-live="polite">
-        {message === "sign-in" ? (
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-blue-300 bg-blue-50 p-3 text-sm">
-            <p>Sign in to save your progress.</p>
-            <form action={signInWithGoogle}>
-              <button
-                type="submit"
-                className="rounded-lg bg-blue-700 px-3 py-1.5 font-medium text-white hover:bg-blue-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
-              >
-                Sign in with Google
-              </button>
-            </form>
-          </div>
-        ) : message ? (
+        {message && (
           <p role="alert" className="rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-900">
             {message}
           </p>
-        ) : null}
+        )}
       </div>
 
       <ul className="grid grid-cols-5 gap-2 sm:grid-cols-8 md:grid-cols-10">

@@ -52,7 +52,15 @@ If the site's address changes (for example a custom domain), add the new address
 - Supabase: **Authentication > URL Configuration** (Site URL, and Redirect URLs with `/auth/callback`)
 - Google Cloud Console: **Clients > Kanji Checklist web > Authorized JavaScript origins**
 
-Google sign-in is in **Testing** mode: only the test users listed in Google Cloud Console (**Audience**) can sign in. Switch it to **In production** before public launch.
+## Who can create an account
+
+Sign-up is invite-only for now. (Google's "Testing" mode does not limit who can sign in, because the site only asks Google for name, email and profile picture.) Instead, Supabase refuses new accounts unless the email is on the allowlist:
+
+- **To invite someone:** Supabase dashboard > **Table Editor** > **signup_allowlist** > **Insert** > **Insert row**. Type their email in lowercase (and an optional note), then **Save**.
+- **To remove someone who already has an account:** take them off the allowlist, then **Authentication** > **Users**, click the **...** next to them, **Delete user**.
+- **To open sign-up to everyone (at launch):** **Authentication** > **Auth Hooks**, and switch off the **Before User Created** hook.
+
+Never put emails in the code or migration files: the repo is public.
 
 ## Database changes
 

@@ -50,6 +50,7 @@ All database changes go in SQL files under `supabase/migrations/` (named `YYYYMM
 
 - `kanji`: one row per kanji. Columns: `character` (text, primary key), `jlpt_level` (smallint 1 to 5, where 5 = N5 and 1 = N1), `jlpt_level_estimated` (boolean, true for 19 kanji missing from the Waller copy whose level we estimated), `meanings` (text[]), `on_readings` (text[]), `kun_readings` (text[]), `stroke_count` (smallint), `frequency` (int, nullable), `sort_order` (int, for display order within a level, most common first), `grade` (smallint, nullable, Japanese school grade), `radical` (text), `stroke_paths` (text[], SVG path per stroke from KanjiVG). Romaji is derived from the kana when displayed, not stored. Readable by everyone, writable by nobody through the API.
 - `user_kanji_progress`: one row per user per kanji that is not grey. Columns: `user_id` (uuid, references `auth.users` with `on delete cascade`), `kanji` (text, references `kanji.character`), `status` (enum `kanji_status`: `learning`, `struggling`, `learnt`), `updated_at` (timestamptz default now()). Primary key `(user_id, kanji)`. Setting a kanji back to grey deletes the row.
+- `signup_allowlist`: emails (lowercase, primary key) allowed to create accounts, plus `note` and `added_at`. No API access at all; only the auth hook (`supabase_auth_admin`) can read it.
 - **Row Level Security must be enabled on every table.** Users may select, insert, update and delete only rows where `user_id = auth.uid()`.
 
 ## Kanji data and licences
@@ -67,7 +68,8 @@ All database changes go in SQL files under `supabase/migrations/` (named `YYYYMM
 - All levels on one page (the home page), stacked N5 at the top down to N1 at the bottom, each with a grid of kanji tiles and a progress summary (counts of each colour). A sticky N5 to N1 bar jumps to each section. No separate page per level.
 - Tapping a tile cycles grey → yellow → red → green → grey. Save immediately (optimistic update, revert and show a message on error).
 - Colour must not be the only signal: also show a small icon or label for each status, for colour-blind users. Meet basic accessibility (keyboard focus, labels, contrast).
-- Signed-out visitors can browse the kanji grid but must sign in to save progress.
+- Sign-in is optional. Signed-out visitors can mark kanji too; their progress is saved in the browser's local storage (`src/lib/local-progress.ts`), never sent to the server. On sign-in, browser progress is copied into the account (the account's colour wins if both have one) and the browser copy is cleared.
+- Sign-up is invite-only for now: a Supabase "Before User Created" auth hook refuses new accounts unless the email is in the `signup_allowlist` table. Carl adds emails in the Table Editor; never put emails in code or migrations (the repo is public). Google's OAuth "Testing" mode does NOT restrict sign-in for basic scopes, so it can't be used for this. Switch the hook off to open sign-up at launch.
 - Sign-in methods: Google first. Discord and GitHub may be added. No email/password and no Apple login (Apple costs $99/year) unless Carl asks.
 
 ## Privacy and compliance

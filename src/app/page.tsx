@@ -1,6 +1,7 @@
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { KanjiGrid } from "@/components/KanjiGrid";
+import { LocalProgressMerge } from "@/components/LocalProgressMerge";
 import { getLevelKanji, getUserProgress, type LevelKanji } from "@/lib/kanji";
 import { type KanjiStatus, statusInfo, statusOrder } from "@/lib/kanji-status";
 import { levels } from "@/lib/levels";
@@ -15,8 +16,8 @@ export default async function Home() {
       <header className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold">Kanji Checklist</h1>
         <p className="text-zinc-700">
-          Every JLPT kanji from N5 to N1, most common first within each level. Sign in with Google to save your
-          progress.
+          Every JLPT kanji from N5 to N1, most common first within each level. No account needed: your progress is
+          saved as you go.
         </p>
         <p className="text-sm text-zinc-700">
           Tap a kanji to cycle:{" "}
@@ -60,7 +61,18 @@ async function SignedInLevelSections({ kanjiByLevel }: { kanjiByLevel: LevelKanj
   const userId = data?.claims?.sub ?? null;
   const progress = userId ? await getUserProgress() : {};
 
-  return <LevelSections kanjiByLevel={kanjiByLevel} progress={progress} userId={userId} />;
+  return (
+    <>
+      {userId ? (
+        <LocalProgressMerge userId={userId} />
+      ) : (
+        <p className="rounded-lg border border-blue-300 bg-blue-50 p-3 text-sm text-blue-950">
+          Your progress is saved in this browser. Sign in with Google (optional) to keep it on all your devices.
+        </p>
+      )}
+      <LevelSections kanjiByLevel={kanjiByLevel} progress={progress} userId={userId} />
+    </>
+  );
 }
 
 function LevelSections({

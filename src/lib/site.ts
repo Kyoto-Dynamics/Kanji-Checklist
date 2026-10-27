@@ -5,5 +5,5 @@ export const site = {
   operator: "Kyoto Dynamics",
   // Where people send privacy questions and requests.
   contactEmail: "info@kyotodynamics.com",
-  legalLastUpdated: "25 October 2026",
+  legalLastUpdated: "27 October 2026",
 };

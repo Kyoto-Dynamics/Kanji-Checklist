@@ -21,10 +21,15 @@ export async function GET(request: NextRequest) {
       const cookieStore = await cookies();
       const returnTo = cookieStore.get(returnToCookie)?.value;
       cookieStore.delete(returnToCookie);
-      // Only follow paths on this site ("/levels/n5"), never "//other-site.com".
+      // Only follow paths on this site ("/settings"), never "//other-site.com".
       const path = returnTo?.startsWith("/") && !returnTo.startsWith("//") ? returnTo : "/";
       return NextResponse.redirect(`${origin}${path}`);
     }
+  }
+
+  // The sign-up allowlist hook (see supabase/migrations) refused a new account.
+  if (searchParams.get("error_description")?.includes("invite-only")) {
+    return NextResponse.redirect(`${origin}/invite-only`);
   }
 
   return NextResponse.redirect(`${origin}/auth/error`);

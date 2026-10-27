@@ -16,8 +16,15 @@ export default function PrivacyPage() {
         it.
       </p>
 
-      <h2>What we store</h2>
-      <p>You can browse the kanji without an account. If you sign in with Google, we store:</p>
+      <h2>Without an account</h2>
+      <p>
+        You can use the whole checklist without signing in. Your kanji progress is then saved only in your
+        browser&apos;s local storage, on your device. It is never sent to us. Clearing your browser data deletes it.
+        If you later sign in, that progress is copied into your account and removed from the browser.
+      </p>
+
+      <h2>What we store if you sign in</h2>
+      <p>If you sign in with Google, we store:</p>
       <ul>
         <li>
           <strong>Your Google account details:</strong> your email address, your name, a link to your Google
@@ -42,11 +49,12 @@ export default function PrivacyPage() {
         provide the service you sign up for.
       </p>
 
-      <h2>Cookies</h2>
+      <h2>Cookies and browser storage</h2>
       <p>
-        We only use cookies that the site needs to work: login cookies that keep you signed in, and a short-lived
-        cookie (deleted after 10 minutes) that returns you to the page you were on after signing in. We don&apos;t
-        use advertising or tracking cookies, so there is no cookie banner.
+        We only use storage that the site needs to work: login cookies that keep you signed in, a short-lived
+        cookie (deleted after 10 minutes) that returns you to the page you were on after signing in, and local
+        storage for your progress when you aren&apos;t signed in. We don&apos;t use advertising or tracking cookies,
+        so there is no cookie banner.
       </p>
 
       <h2>Who processes your data</h2>
